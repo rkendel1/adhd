@@ -255,7 +255,7 @@
     render().catch((error) => {
       unlockStatus.textContent = error.message;
     });
-  }, 1000);
+  }, 5000);
   render().catch((error) => {
     unlockStatus.textContent = error.message;
   });

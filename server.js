@@ -122,7 +122,7 @@ function createServer({ engine = new UnlockEngine(), rootDir = __dirname } = {})
         return;
       }
 
-      if (error && error.message) {
+      if (error.message) {
         sendJson(res, 400, { error: error.message });
         return;
       }
