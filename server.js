@@ -82,8 +82,8 @@ function createServer({ engine = new UnlockEngine(), rootDir = __dirname } = {})
         }
 
         if (pathname === '/api/share') {
-          const payload = engine.shareDailyUnlockCount();
-          sendJson(res, 200, { payload, state: engine.getState() });
+          const shareResult = engine.shareDailyUnlockCount();
+          sendJson(res, 200, { shareResult, state: engine.getState() });
           return;
         }
       }

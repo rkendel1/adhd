@@ -160,7 +160,9 @@
 
     if (selectId) {
       selectedRewardInput.value = selectId;
-      if (stateCache) renderState(stateCache);
+      render().catch((error) => {
+        unlockStatus.textContent = error.message;
+      });
       return;
     }
 
@@ -241,9 +243,9 @@
 
   shareBtn.addEventListener('click', async () => {
     try {
-      const payload = await api('/api/share', { method: 'POST' });
-      shareResult.textContent = `Shared ${payload.payload.unlockCount} daily unlock(s) with buddy sync.`;
-      renderState(payload.state);
+      const response = await api('/api/share', { method: 'POST' });
+      shareResult.textContent = `Shared ${response.shareResult.unlockCount} daily unlock(s) with buddy sync.`;
+      renderState(response.state);
     } catch (error) {
       shareResult.textContent = error.message;
     }
