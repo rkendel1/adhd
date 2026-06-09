@@ -26,7 +26,10 @@
 
     getState(nowMs = this.now()) {
       this.tick(nowMs);
-      return JSON.parse(JSON.stringify(this.state));
+      return {
+        ...JSON.parse(JSON.stringify(this.state)),
+        hardGateActive: this.isHardGateActive(nowMs)
+      };
     }
 
     isRewardUnlocked(rewardId, nowMs = this.now()) {
@@ -36,6 +39,11 @@
         this.state.activeUnlock.rewardId === rewardId &&
         this.state.activeUnlock.unlockUntilMs > nowMs
       );
+    }
+
+    isHardGateActive(nowMs = this.now()) {
+      this.tick(nowMs);
+      return !this.state.activeUnlock;
     }
 
     startMicroTask({ rewardId, taskText, timerSeconds = 30 }) {
@@ -100,6 +108,9 @@
     }
 
     updateRewardDuration(rewardId, durationMinutes) {
+      if (this.isHardGateActive()) {
+        throw new Error('Hard gate is active. Complete your micro-task to unlock first.');
+      }
       const reward = this.state.rewards.find((r) => r.id === rewardId);
       if (!reward) throw new Error('Reward not found.');
       if (durationMinutes < 15 || durationMinutes > 60) {
@@ -110,6 +121,9 @@
     }
 
     addBrainDump(text) {
+      if (this.isHardGateActive()) {
+        throw new Error('Hard gate is active. Complete your micro-task to unlock first.');
+      }
       if (!text || !text.trim()) throw new Error('Brain dump text cannot be empty.');
       const note = { text: text.trim(), createdAtMs: this.now() };
       this.state.brainDump.unshift(note);
@@ -123,6 +137,9 @@
     }
 
     shareDailyUnlockCount() {
+      if (this.isHardGateActive()) {
+        throw new Error('Hard gate is active. Complete your micro-task to unlock first.');
+      }
       return {
         unlockCount: this.state.keysEarnedToday,
         sharedAtMs: this.now(),

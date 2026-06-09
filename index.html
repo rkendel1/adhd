@@ -10,14 +10,15 @@
     <main class="app">
       <h1>ADHD Unlock Engine</h1>
       <p class="tagline">Do the hard thing → earn the good thing.</p>
+      <div id="hard-gate-overlay" class="hard-gate-overlay" aria-live="polite"></div>
 
-      <section>
+      <section id="reward-section">
         <h2>1) Superpower Rewards (locked by default)</h2>
         <input id="selected-reward" type="hidden" value="youtube" />
         <div id="reward-list" class="reward-grid"></div>
       </section>
 
-      <section>
+      <section id="task-section">
         <h2>2) Micro hard thing</h2>
         <div id="suggestions" class="suggestions"></div>
         <label>
@@ -35,26 +36,26 @@
         <p id="task-status"></p>
       </section>
 
-      <section>
+      <section id="unlock-section">
         <h2>3) Unlock status</h2>
         <p id="unlock-status"></p>
         <p>Keys earned today: <span id="keys-earned"></span></p>
       </section>
 
-      <section>
+      <section id="bypass-section">
         <h2>Bypass reflection</h2>
         <p>Bypasses this week: <strong id="bypass-count">0</strong></p>
         <ul id="bypass-log"></ul>
       </section>
 
-      <section>
+      <section id="brain-dump-section">
         <h2>Brain dump parking</h2>
         <textarea id="brain-dump-input" rows="2" placeholder="Park distracting ideas here"></textarea>
         <button id="add-brain-dump">Add note</button>
         <ul id="brain-dump-list"></ul>
       </section>
 
-      <section>
+      <section id="share-section">
         <h2>Optional accountability</h2>
         <button id="share-unlocks">Share daily unlock count with buddy</button>
         <p id="share-result"></p>

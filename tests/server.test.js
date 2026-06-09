@@ -55,3 +55,28 @@ test('server exposes unlock state and task APIs', async (t) => {
   assert.equal(completeRes.status, 200);
   assert.equal(completePayload.state.keysEarnedToday, 1);
 });
+
+test('server blocks non-task actions while hard gate is active', async (t) => {
+  const baseUrl = startServer(t);
+
+  const shareLockedRes = await fetch(`${baseUrl}/api/share`, { method: 'POST' });
+  const shareLockedPayload = await shareLockedRes.json();
+  assert.equal(shareLockedRes.status, 400);
+  assert.match(shareLockedPayload.error, /Hard gate is active/);
+
+  await fetch(`${baseUrl}/api/start-task`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      rewardId: 'youtube',
+      taskText: 'One hard thing',
+      timerSeconds: 1
+    })
+  });
+  await fetch(`${baseUrl}/api/complete-task`, { method: 'POST' });
+
+  const shareUnlockedRes = await fetch(`${baseUrl}/api/share`, { method: 'POST' });
+  const shareUnlockedPayload = await shareUnlockedRes.json();
+  assert.equal(shareUnlockedRes.status, 200);
+  assert.equal(shareUnlockedPayload.shareResult.unlockCount, 1);
+});
