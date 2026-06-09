@@ -28,14 +28,21 @@
   let stateCache = null;
 
   async function api(path, options = {}) {
-    const response = await fetch(path, {
-      method: options.method || 'GET',
-      headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
-      body: options.body ? JSON.stringify(options.body) : undefined
-    });
-    const payload = await response.json();
-    if (!response.ok) throw new Error(payload.error || 'Request failed.');
-    return payload;
+    try {
+      const response = await fetch(path, {
+        method: options.method || 'GET',
+        headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+        body: options.body ? JSON.stringify(options.body) : undefined
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Request failed.');
+      return payload;
+    } catch (error) {
+      if (error instanceof TypeError) {
+        throw new Error('Unable to reach server. Make sure the app is running.');
+      }
+      throw error;
+    }
   }
 
   function isRewardUnlocked(state, rewardId) {
@@ -255,7 +262,7 @@
     render().catch((error) => {
       unlockStatus.textContent = error.message;
     });
-  }, 5000);
+  }, 2000);
   render().catch((error) => {
     unlockStatus.textContent = error.message;
   });
