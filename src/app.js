@@ -1,5 +1,4 @@
 (function () {
-  const engine = new window.UnlockEngine();
   const suggestions = [
     '5 min email purge',
     'Drink water + quick tidy',
@@ -26,20 +25,40 @@
   const shareResult = document.getElementById('share-result');
 
   let countdown = null;
+  let stateCache = null;
 
-  function lockStateLabel(reward) {
-    return engine.isRewardUnlocked(reward.id) ? 'Unlocked' : 'Locked';
+  async function api(path, options = {}) {
+    const response = await fetch(path, {
+      method: options.method || 'GET',
+      headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+      body: options.body ? JSON.stringify(options.body) : undefined
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Request failed.');
+    return payload;
+  }
+
+  function isRewardUnlocked(state, rewardId) {
+    return !!(
+      state.activeUnlock &&
+      state.activeUnlock.rewardId === rewardId &&
+      state.activeUnlock.unlockUntilMs > Date.now()
+    );
+  }
+
+  function lockStateLabel(state, reward) {
+    return isRewardUnlocked(state, reward.id) ? 'Unlocked' : 'Locked';
   }
 
   function renderRewards(state) {
     rewardList.innerHTML = '';
     state.rewards.forEach((reward) => {
-      const isUnlocked = engine.isRewardUnlocked(reward.id);
+      const isUnlocked = isRewardUnlocked(state, reward.id);
       const card = document.createElement('div');
       card.className = `reward-card ${isUnlocked ? 'unlocked' : 'locked'}`;
       card.innerHTML = `
         <h3>${reward.name}</h3>
-        <p>Status: <strong>${lockStateLabel(reward)}</strong></p>
+        <p>Status: <strong>${lockStateLabel(state, reward)}</strong></p>
         <p>Unlock Block: ${reward.durationMinutes} minutes</p>
         <label>Duration (15-60 min):
           <input type="number" min="15" max="60" value="${reward.durationMinutes}" data-reward-duration="${reward.id}">
@@ -93,13 +112,18 @@
     unlockStatus.textContent = `${reward.name} is unlocked for ~${remainingMin} more minute(s).`;
   }
 
-  function render() {
-    const state = engine.getState();
+  function renderState(state) {
+    stateCache = state;
     renderRewards(state);
     renderKeys(state);
     renderBypass(state);
     renderNotes(state);
     renderUnlockStatus(state);
+  }
+
+  async function render() {
+    const payload = await api('/api/state');
+    renderState(payload.state);
   }
 
   function beginTaskCountdown(seconds) {
@@ -130,81 +154,107 @@
     suggestionsList.appendChild(button);
   });
 
-  rewardList.addEventListener('click', (event) => {
+  rewardList.addEventListener('click', async (event) => {
     const selectId = event.target.getAttribute('data-reward-select');
     const openId = event.target.getAttribute('data-reward-open');
 
     if (selectId) {
       selectedRewardInput.value = selectId;
-      render();
+      if (stateCache) renderState(stateCache);
       return;
     }
 
     if (openId) {
-      const result = engine.requestRewardAccess(openId);
-      if (result.allowed) {
-        unlockStatus.textContent = 'Superpower zone open. Dive deep guilt-free.';
-      } else {
-        unlockStatus.textContent = 'Still locked. Bypass attempt logged for weekly reflection.';
+      try {
+        const payload = await api('/api/reward-access', {
+          method: 'POST',
+          body: { rewardId: openId }
+        });
+        if (payload.result.allowed) {
+          unlockStatus.textContent = 'Superpower zone open. Dive deep guilt-free.';
+        } else {
+          unlockStatus.textContent = 'Still locked. Bypass attempt logged for weekly reflection.';
+        }
+        renderState(payload.state);
+      } catch (error) {
+        unlockStatus.textContent = error.message;
       }
-      render();
     }
   });
 
-  rewardList.addEventListener('change', (event) => {
+  rewardList.addEventListener('change', async (event) => {
     const rewardId = event.target.getAttribute('data-reward-duration');
     if (!rewardId) return;
 
     try {
       const value = Number(event.target.value);
-      engine.updateRewardDuration(rewardId, value);
-      render();
+      const payload = await api('/api/reward-duration', {
+        method: 'POST',
+        body: { rewardId, durationMinutes: value }
+      });
+      renderState(payload.state);
     } catch (error) {
       unlockStatus.textContent = error.message;
-      render();
     }
   });
 
-  startTaskBtn.addEventListener('click', () => {
+  startTaskBtn.addEventListener('click', async () => {
     try {
-      const task = engine.startMicroTask({
-        rewardId: selectedRewardInput.value,
-        taskText: taskInput.value,
-        timerSeconds: Number(timerInput.value || 30)
+      const payload = await api('/api/start-task', {
+        method: 'POST',
+        body: {
+          rewardId: selectedRewardInput.value,
+          taskText: taskInput.value,
+          timerSeconds: Number(timerInput.value || 30)
+        }
       });
-      beginTaskCountdown(task.timerSeconds);
-      render();
+      beginTaskCountdown(payload.task.timerSeconds);
+      renderState(payload.state);
     } catch (error) {
       taskStatus.textContent = error.message;
     }
   });
 
-  completeTaskBtn.addEventListener('click', () => {
+  completeTaskBtn.addEventListener('click', async () => {
     try {
-      engine.completeMicroTask();
+      const payload = await api('/api/complete-task', { method: 'POST' });
       taskStatus.textContent = 'Unlocked! Reward access granted.';
       completeTaskBtn.disabled = true;
-      render();
+      renderState(payload.state);
     } catch (error) {
       taskStatus.textContent = error.message;
     }
   });
 
-  addNoteBtn.addEventListener('click', () => {
+  addNoteBtn.addEventListener('click', async () => {
     try {
-      engine.addBrainDump(noteInput.value);
+      const payload = await api('/api/brain-dump', {
+        method: 'POST',
+        body: { text: noteInput.value }
+      });
       noteInput.value = '';
-      render();
+      renderState(payload.state);
     } catch (error) {
       unlockStatus.textContent = error.message;
     }
   });
 
-  shareBtn.addEventListener('click', () => {
-    const payload = engine.shareDailyUnlockCount();
-    shareResult.textContent = `Shared ${payload.unlockCount} daily unlock(s) with buddy sync.`;
+  shareBtn.addEventListener('click', async () => {
+    try {
+      const payload = await api('/api/share', { method: 'POST' });
+      shareResult.textContent = `Shared ${payload.payload.unlockCount} daily unlock(s) with buddy sync.`;
+      renderState(payload.state);
+    } catch (error) {
+      shareResult.textContent = error.message;
+    }
   });
 
-  setInterval(render, 1000);
-  render();
+  setInterval(() => {
+    render().catch((error) => {
+      unlockStatus.textContent = error.message;
+    });
+  }, 1000);
+  render().catch((error) => {
+    unlockStatus.textContent = error.message;
+  });
 })();
