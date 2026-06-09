@@ -13,7 +13,12 @@ Minimal MVP for an **ADHD Unlock Engine** with one primary screen.
 - Buddy-share stub that shares only the daily unlock count.
 
 ## Run
-Open `index.html` in a browser from the repository root.
+```bash
+cd <repository-root>
+npm start
+```
+
+Then open http://localhost:3000.
 
 ## Test
 ```bash
