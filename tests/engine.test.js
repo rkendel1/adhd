@@ -52,3 +52,18 @@ test('unlock expires and relocks reward', () => {
   nowMs = 15 * 60 * 1000 + 1;
   assert.equal(engine.isRewardUnlocked('youtube', nowMs), false);
 });
+
+test('hard gate blocks non-task actions until unlock', () => {
+  const engine = new UnlockEngine();
+
+  assert.equal(engine.getState().hardGateActive, true);
+  assert.throws(() => engine.addBrainDump('Remember this'), /Hard gate is active/);
+  assert.throws(() => engine.shareDailyUnlockCount(), /Hard gate is active/);
+
+  engine.startMicroTask({ rewardId: 'youtube', taskText: 'Do one hard thing', timerSeconds: 1 });
+  engine.completeMicroTask();
+
+  assert.equal(engine.getState().hardGateActive, false);
+  assert.doesNotThrow(() => engine.addBrainDump('Now unlocked.'));
+  assert.doesNotThrow(() => engine.shareDailyUnlockCount());
+});

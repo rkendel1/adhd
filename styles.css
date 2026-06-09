@@ -9,6 +9,7 @@ body {
   max-width: 920px;
   margin: 0 auto;
   padding: 20px;
+  position: relative;
 }
 
 .tagline {
@@ -21,6 +22,32 @@ section {
   border-radius: 12px;
   padding: 12px;
   margin: 12px 0;
+}
+
+section.blocked-by-gate {
+  opacity: 0.45;
+  pointer-events: none;
+  filter: grayscale(0.3);
+}
+
+section.focus-task {
+  border-color: #4ea46d;
+  box-shadow: 0 0 0 1px #4ea46d;
+}
+
+.hard-gate-overlay {
+  display: none;
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #8f6a00;
+  background: #3a2d00;
+  color: #ffebaf;
+  font-weight: 600;
+}
+
+.hard-gate-overlay.active {
+  display: block;
 }
 
 .reward-grid {

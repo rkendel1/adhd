@@ -7,6 +7,13 @@
   ];
 
   const rewardList = document.getElementById('reward-list');
+  const rewardSection = document.getElementById('reward-section');
+  const taskSection = document.getElementById('task-section');
+  const unlockSection = document.getElementById('unlock-section');
+  const bypassSection = document.getElementById('bypass-section');
+  const notesSection = document.getElementById('brain-dump-section');
+  const shareSection = document.getElementById('share-section');
+  const hardGateOverlay = document.getElementById('hard-gate-overlay');
   const selectedRewardInput = document.getElementById('selected-reward');
   const suggestionsList = document.getElementById('suggestions');
   const taskInput = document.getElementById('task-input');
@@ -59,10 +66,16 @@
 
   function renderRewards(state) {
     rewardList.innerHTML = '';
+    const hardGateActive = !!state.hardGateActive;
     state.rewards.forEach((reward) => {
       const isUnlocked = isRewardUnlocked(state, reward.id);
       const card = document.createElement('div');
       card.className = `reward-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+      const accessButtonLabel = hardGateActive
+        ? 'Hard gate active'
+        : isUnlocked
+          ? 'Enter Superpower Zone'
+          : 'Try Access (logs bypass)';
       card.innerHTML = `
         <h3>${reward.name}</h3>
         <p>Status: <strong>${lockStateLabel(state, reward)}</strong></p>
@@ -71,7 +84,7 @@
           <input type="number" min="15" max="60" value="${reward.durationMinutes}" data-reward-duration="${reward.id}">
         </label>
         <button data-reward-select="${reward.id}">${selectedRewardInput.value === reward.id ? 'Selected' : 'Select Reward'}</button>
-        <button data-reward-open="${reward.id}">${isUnlocked ? 'Enter Superpower Zone' : 'Try Access (logs bypass)'}</button>
+        <button data-reward-open="${reward.id}" ${hardGateActive ? 'disabled' : ''}>${accessButtonLabel}</button>
       `;
       rewardList.appendChild(card);
     });
@@ -108,6 +121,16 @@
   }
 
   function renderUnlockStatus(state) {
+    if (state.hardGateActive && !state.pendingTask) {
+      unlockStatus.textContent = 'Hard gate active. Start and finish a micro-task to unlock your reward.';
+      return;
+    }
+
+    if (state.hardGateActive && state.pendingTask) {
+      unlockStatus.textContent = 'Hard gate active. Stay with the hard thing until the timer completes.';
+      return;
+    }
+
     if (!state.activeUnlock) {
       unlockStatus.textContent = 'All rewards are currently locked. Earn a key to unlock one.';
       return;
@@ -119,6 +142,35 @@
     unlockStatus.textContent = `${reward.name} is unlocked for ~${remainingMin} more minute(s).`;
   }
 
+  function toggleSectionBlocked(section, blocked) {
+    if (!section) return;
+    section.classList.toggle('blocked-by-gate', blocked);
+    section.setAttribute('aria-disabled', blocked ? 'true' : 'false');
+  }
+
+  function renderHardGate(state) {
+    const hardGateActive = !!state.hardGateActive;
+    toggleSectionBlocked(unlockSection, hardGateActive);
+    toggleSectionBlocked(bypassSection, hardGateActive);
+    toggleSectionBlocked(notesSection, hardGateActive);
+    toggleSectionBlocked(shareSection, hardGateActive);
+
+    if (hardGateOverlay) {
+      hardGateOverlay.classList.toggle('active', hardGateActive);
+      hardGateOverlay.textContent = hardGateActive
+        ? 'Hard gate ON: finish your micro-task before using other parts of the app.'
+        : '';
+    }
+
+    if (hardGateActive) {
+      taskSection?.classList.add('focus-task');
+      rewardSection?.classList.add('focus-task');
+    } else {
+      taskSection?.classList.remove('focus-task');
+      rewardSection?.classList.remove('focus-task');
+    }
+  }
+
   function renderState(state) {
     stateCache = state;
     renderRewards(state);
@@ -126,6 +178,7 @@
     renderBypass(state);
     renderNotes(state);
     renderUnlockStatus(state);
+    renderHardGate(state);
   }
 
   async function render() {

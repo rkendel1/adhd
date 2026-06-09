@@ -7,6 +7,7 @@ Minimal MVP for an **ADHD Unlock Engine** with one primary screen.
 - You choose one reward and complete a micro-task timer.
 - Completing the micro-task unlocks exactly one reward for a configurable 15-60 minute block.
 - One active unlock at a time is enforced.
+- A hard gate blocks non-task actions until a reward is earned by completing the micro-task.
 - Locked-access attempts are logged as bypasses for weekly reflection.
 - Brain-dump parking notes.
 - "Keys earned today" visual counter.
