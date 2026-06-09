@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ADHD Unlock Engine MVP</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <h1>ADHD Unlock Engine</h1>
+      <p class="tagline">Do the hard thing → earn the good thing.</p>
+
+      <section>
+        <h2>1) Superpower Rewards (locked by default)</h2>
+        <input id="selected-reward" type="hidden" value="youtube" />
+        <div id="reward-list" class="reward-grid"></div>
+      </section>
+
+      <section>
+        <h2>2) Micro hard thing</h2>
+        <div id="suggestions" class="suggestions"></div>
+        <label>
+          Task
+          <input id="task-input" type="text" placeholder="Quick task before unlock" />
+        </label>
+        <label>
+          Micro-task timer (seconds)
+          <input id="task-timer-seconds" type="number" min="5" value="30" />
+        </label>
+        <div class="controls">
+          <button id="start-task">Start timer</button>
+          <button id="complete-task" disabled>Check off + Unlock</button>
+        </div>
+        <p id="task-status"></p>
+      </section>
+
+      <section>
+        <h2>3) Unlock status</h2>
+        <p id="unlock-status"></p>
+        <p>Keys earned today: <span id="keys-earned"></span></p>
+      </section>
+
+      <section>
+        <h2>Bypass reflection</h2>
+        <p>Bypasses this week: <strong id="bypass-count">0</strong></p>
+        <ul id="bypass-log"></ul>
+      </section>
+
+      <section>
+        <h2>Brain dump parking</h2>
+        <textarea id="brain-dump-input" rows="2" placeholder="Park distracting ideas here"></textarea>
+        <button id="add-brain-dump">Add note</button>
+        <ul id="brain-dump-list"></ul>
+      </section>
+
+      <section>
+        <h2>Optional accountability</h2>
+        <button id="share-unlocks">Share daily unlock count with buddy</button>
+        <p id="share-result"></p>
+      </section>
+    </main>
+
+    <script src="./src/engine.js"></script>
+    <script src="./src/app.js"></script>
+  </body>
+</html>
