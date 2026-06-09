@@ -13,10 +13,10 @@ Minimal MVP for an **ADHD Unlock Engine** with one primary screen.
 - Buddy-share stub that shares only the daily unlock count.
 
 ## Run
-Open `/home/runner/work/adhd/adhd/rkendel1/adhd/index.html` in a browser.
+Open `index.html` in a browser from the repository root.
 
 ## Test
 ```bash
-cd /home/runner/work/adhd/adhd/rkendel1/adhd
+cd <repository-root>
 npm test
 ```
