@@ -6,7 +6,17 @@ const { createServer } = require('../server.js');
 function startServer(t) {
   const server = createServer({ rootDir: path.resolve(__dirname, '..') });
   server.listen(0);
-  t.after(() => server.close());
+  t.after(async () => {
+    await new Promise((resolve, reject) => {
+      server.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
+    });
+  });
   const { port } = server.address();
   return `http://127.0.0.1:${port}`;
 }
